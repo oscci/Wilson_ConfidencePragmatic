@@ -1,0 +1,163 @@
+---
+title: "Analyse Implicature and Grammar Tasks"
+author: "Alex C Wilson"
+date: "30/05/2021"
+output: html_document
+---
+
+from https://osf.io/wk97s/
+
+This document presents pre-registered analysis relating to the following paper:
+
+Wilson, A. C., & Bishop, D. (2020). Registered report: Investigating a preference for certainty in conversation among autistic adults compared to dyslexic adults and the general population. PeerJ, 8, e10398. https://doi.org/10.7717/peerj.10398
+
+A battery of tests was presented to a sample of autistic adults, adults with self-reported reading difficulties and non-autistic adults. This battery included several measures to characterise the sample as well as the Implicature Comprehension Test-2 and Grammaticality Decision Test, which were the key tests in the study.
+
+```{r packages}
+require(tidyverse)
+require(psych)
+require(yarrr)
+require(lme4)
+
+```
+Step 1: Compute descriptive statistics.
+
+Read in data and make data frame including necessary variables.
+
+```{r readdata}
+participant.info<-read.csv("https://osf.io/2qycv/download",stringsAsFactors=F)
+Implicature<-read.csv("https://osf.io/rz3fs/download",stringsAsFactors=F)
+Grammar<-read.csv("https://osf.io/a42fn/download",stringsAsFactors=F)
+
+AQ<-read.csv("https://osf.io/jb7ge/download",stringsAsFactors=F)
+CCSR<-read.csv("https://osf.io/hcq9a/download",stringsAsFactors=F)
+ARQ<-read.csv("https://osf.io/mrz67/download",stringsAsFactors=F)
+ICAR<-read.csv("https://osf.io/6edqh/download",stringsAsFactors=F)
+vocab<-read.csv("https://osf.io/qyng8/download",stringsAsFactors=F)
+IUS<-read.csv("https://osf.io/kec6x/download",stringsAsFactors=F)
+
+alldata.noexclusions<-data.frame(participant.info[,c(1,3)],
+    AQ$AQ10.Total,CCSR$CCSR.Zscore,ARQ$ARQ.Total,ICAR$ICAR.Total,vocab$Vocab.Total,IUS$IUS12.Corrected.Total,
+    Implicature$Accuracy.Total,Implicature$Confidence.Total,
+    Grammar$Accuracy.Total,Grammar$Confidence.Total,
+    Implicature$Control.Total)
+```
+Carry out outlier exclusion. Exclude individuals with an outlying score on the control items of the ICT-2 and on accuracy on the GDT.
+
+Then make data frames for testing the two hypotheses. For hypothesis one, we want data for individuals with a clinical diagnosis of autism and control adults. For hypothesis two, we also want data for individuals with self-reported reading difficulties. For the moment, we will drop self-diagnosed autistic adults and non-autistic people with an elevated AQ-10 score.
+
+```{r outliers}
+data.withoutexclusions<-alldata.noexclusions[-which(alldata.noexclusions$Implicature.Control.Total<9.6),]
+data.withoutexclusions<-data.withoutexclusions[-which(data.withoutexclusions$Grammar.Accuracy.Total<31),]
+
+data.test.hyp1<-data.withoutexclusions[c(which(data.withoutexclusions$Group=="Clin.Diag.Aut"),which(data.withoutexclusions$Group=="Control")),]
+data.test.hyp2<-data.withoutexclusions[c(which(data.withoutexclusions$Group=="Clin.Diag.Aut"),which(data.withoutexclusions$Group=="Control"),which(data.withoutexclusions$Group=="Reading.Diffs")),]
+
+#Now compute descriptive statistics.
+
+descriptives<-describeBy(data.withoutexclusions[,3:12],group=data.withoutexclusions$Group)
+Autistic.Group<-descriptives[[1]][,c(2,3,4,8,9,11,12)]
+Autistic.Group
+
+
+Nonautistic.Group<-descriptives[[2]][,c(2,3,4,8,9,11,12)]
+Nonautistic.Group
+
+Reading.diffs.Group<-descriptives[[4]][,c(2,3,4,8,9,11,12)]
+Reading.diffs.Group
+
+
+#And compute Cohen’s d comparing autistic and non-autistic groups.
+
+round(cohen.d(data.test.hyp1[,3:12],group=data.test.hyp1$Group)[[1]],2)
+
+```
+
+Group differences are large on the Autism Spectrum Quotient-10 (AQ-10), Communication Checklist - Self Report (CC-SR) pragmatic subscale, and the short version of the Intolerance of Uncertainty Scale, with the autistic group showing elevated scores on all these measures. The autistic group had moderately lower scores for accuracy and confidence on the ICT-2 as predicted. Autistic people also self-reported greater reading difficulties to a moderate degree, but performed better than the control group on the Synonyms Test of vocabulary knowledge. There were no significant differences between the groups in terms of general cognitive ability (on the ICAR) or performance on the grammar test (GDT).
+
+Step 2: Test Hypothesis One
+
+Hypothesis One: Autistic adults will score lower on the Implicature Comprehension Test-2 when responses are coded in terms of confidence (number of yes and no responses, regardless of polarity) than when responses are coded in terms of accuracy (with yes and maybe yes, and maybe no and no responses, combined according to polarity), compared to adults without any neurodevelopmental diagnosis, but will not show this same disparity between accuracy and confidence on the Grammaticality Decision Test.
+
+Below we present plots showing raw data on the two tests of interest. Autistic people showed somewhat lower accuracy on the implicature test. They also showed somewhat lower confidence on this test, but this was in the context of considerable variability in both groups. There were no group differences on the grammar test.
+
+```{r pirateplots}
+pirateplot(data.test.hyp1$Implicature.Accuracy.Total ~ data.test.hyp1$Group,data=data.test.hyp1,
+           main="Accuracy on the Implicature Comprehension Test-2",xlab="Group",ylab="",pal="gray")
+
+pirateplot(data.test.hyp1$Implicature.Confidence.Total ~ data.test.hyp1$Group,data=data.test.hyp1,
+           main="Confidence on the Implicature Comprehension Test",xlab="Group",ylab="",pal="gray")
+
+pirateplot(data.test.hyp1$Grammar.Accuracy.Total ~ data.test.hyp1$Group,data=data.test.hyp1,
+           main="Accuracy on the Grammaticality Decision Test",xlab="Group",ylab="",pal="gray")
+
+pirateplot(data.test.hyp1$Grammar.Confidence.Total ~ data.test.hyp1$Group,data=data.test.hyp1,
+           main="Accuracy on the Grammaticality Decision Test",xlab="Group",ylab="",pal="gray")
+```
+
+Inspection of the plots indicates that the hypothesis was not supported, i.e. autistic people did not show lower confidence on the implicature test relative to their accuracy on the test and their scores on the grammar test. However, in the interest of conducting the full pre-registered analysis, the following code allows the hypothesis to be tested through a mixed model.
+
+First we need to put data into long format, and code each score for participant ID and Group (both variables already present in data set), as well as Task (implicature or grammar) and Response (accuracy or confidence).
+
+```{r makelong}
+
+longdata<-gather(data.test.hyp1, key="Response", value="Total", Implicature.Accuracy.Total:Grammar.Confidence.Total, factor_key=F)
+longdata$Task<-NA
+
+for(i in 1:dim(longdata)[1]){
+  if(longdata$Response[i]=="Implicature.Accuracy.Total"||longdata$Response[i]=="Implicature.Confidence.Total"){
+    longdata$Task[i]<-"Implicature"
+  }
+  if(longdata$Response[i]=="Grammar.Accuracy.Total"||longdata$Response[i]=="Grammar.Confidence.Total"){
+    longdata$Task[i]<-"Grammar"
+  }
+  if(longdata$Response[i]=="Implicature.Accuracy.Total"||longdata$Response[i]=="Grammar.Accuracy.Total"){
+    longdata$Response[i]<-"Accuracy"
+  }
+  if(longdata$Response[i]=="Implicature.Confidence.Total"||longdata$Response[i]=="Grammar.Confidence.Total"){
+    longdata$Response[i]<-"Confidence"
+  }
+}
+```
+Now we can run a mixed model to test the hypothesis. Total is our dependent variable; Task (implicature or grammar), Group (autistic or control) and Response (accuracy or confidence) as fixed effects and participant ID as a random effect.
+```{r mixedmodel}
+model<-lmer(Total ~ Task * Group * Response + (1|ID), data=longdata)
+summary(model)
+```
+
+The three-way interaction was not significant, indicating no support for the hypothesis.
+Step 3: Test Hypothesis Two
+
+Hypothesis Two: The number of less confident responses (maybe responses) on the Implicature Comprehension Test-2, the score on the Intolerance of Uncertainty Scale, and self-reported social communication difficulties on the CC-SR will significantly intercorrelate across the full sample.
+
+To test this hypothesis, we find correlations between these variables.
+```{r cortest_DBmodified}
+w<-which(colnames(data.test.hyp2)%in% c("CCSR.CCSR.Zscore","IUS.IUS12.Corrected.Total","Implicature.Accuracy.Total","Implicature.Confidence.Total","Grammar.Accuracy.Total","Grammar.Confidence.Total"))
+cormat<-round(cor(data.test.hyp2[,w],use="complete.obs"),3)
+cormat
+cor.test(data.test.hyp2$Implicature.Confidence.Total,data.test.hyp2$CCSR.CCSR.Zscore)
+
+plot(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$Implicature.Confidence.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='CC_SR pragmatic z-score',ylab='Implicature Confidence')
+
+text(-4,40,paste0('r = ',cormat[1,4]))
+
+cor.test(data.test.hyp2$Implicature.Confidence.Total,data.test.hyp2$IUS.IUS12.Corrected.Total)
+
+plot(data.test.hyp2$IUS.IUS12.Corrected.Total,data.test.hyp2$Implicature.Confidence.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='Intolerance of Uncertainty on IUS-12')
+
+text(45,35,paste0('r = ',cormat[2,4]))
+
+cor.test(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$IUS.IUS12.Corrected.Total)
+plot(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$IUS.IUS12.Corrected.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='CC_SR pragmatic z-score',ylab='Intolerance of uncertainty')
+text(2,45,paste0('r = ',cormat[1,2]))
+
+
+plot(jitter(data.test.hyp2$Implicature.Accuracy.Total,1),jitter(data.test.hyp2$Implicature.Confidence.Total,1),col=as.factor(data.test.hyp2$Group),pch=16,xlab='Implicature Accuracy',ylab='Implicature Confidence')
+text(20,20,paste0('r = ',cormat[3,4]))
+
+plot(jitter(data.test.hyp2$Grammar.Accuracy.Total,1),jitter(data.test.hyp2$Grammar.Confidence.Total,1),col=as.factor(data.test.hyp2$Group),pch=16,xlab='Implicature Accuracy',ylab='Implicature Confidence')
+text(35,30,paste0('r = ',cormat[5,6]))
+```
+This hypothesis was supported. Lower confidence on the ICT-2 was related to greater self-reported communication challenges and greater intolerance of uncertainty.
+
+DB: but need to look at correlations within groups? If Aut group differs from control on both variables, then correlation may just be an artefact of that.
