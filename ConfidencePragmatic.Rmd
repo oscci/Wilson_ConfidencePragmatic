@@ -135,19 +135,16 @@ To test this hypothesis, we find correlations between these variables.
 w<-which(colnames(data.test.hyp2)%in% c("CCSR.CCSR.Zscore","IUS.IUS12.Corrected.Total","Implicature.Accuracy.Total","Implicature.Confidence.Total","Grammar.Accuracy.Total","Grammar.Confidence.Total"))
 cormat<-round(cor(data.test.hyp2[,w],use="complete.obs"),3)
 cormat
-cor.test(data.test.hyp2$Implicature.Confidence.Total,data.test.hyp2$CCSR.CCSR.Zscore)
 
 plot(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$Implicature.Confidence.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='CC_SR pragmatic z-score',ylab='Implicature Confidence')
 
 text(-4,40,paste0('r = ',cormat[1,4]))
 
-cor.test(data.test.hyp2$Implicature.Confidence.Total,data.test.hyp2$IUS.IUS12.Corrected.Total)
 
 plot(data.test.hyp2$IUS.IUS12.Corrected.Total,data.test.hyp2$Implicature.Confidence.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='Intolerance of Uncertainty on IUS-12')
 
 text(45,35,paste0('r = ',cormat[2,4]))
 
-cor.test(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$IUS.IUS12.Corrected.Total)
 plot(data.test.hyp2$CCSR.CCSR.Zscore,data.test.hyp2$IUS.IUS12.Corrected.Total,col=as.factor(data.test.hyp2$Group),pch=16,xlab='CC_SR pragmatic z-score',ylab='Intolerance of uncertainty')
 text(2,45,paste0('r = ',cormat[1,2]))
 
@@ -157,7 +154,8 @@ text(20,20,paste0('r = ',cormat[3,4]))
 
 plot(jitter(data.test.hyp2$Grammar.Accuracy.Total,1),jitter(data.test.hyp2$Grammar.Confidence.Total,1),col=as.factor(data.test.hyp2$Group),pch=16,xlab='Implicature Accuracy',ylab='Implicature Confidence')
 text(35,30,paste0('r = ',cormat[5,6]))
+
 ```
 This hypothesis was supported. Lower confidence on the ICT-2 was related to greater self-reported communication challenges and greater intolerance of uncertainty.
 
-DB: but need to look at correlations within groups? If Aut group differs from control on both variables, then correlation may just be an artefact of that.
+DB: but need to look at correlations within groups? If Aut group differs from control on both variables, then correlation may just be an artefact of that. So worth redoing with just Autistic group. 
